@@ -33,8 +33,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter myAdapter;
     private List<Repository> repositoryList;
 
-    private CompositeDisposable compositeDisposable;
-
 
 
     @Override
@@ -42,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        compositeDisposable = new CompositeDisposable();
         repositoryList = new ArrayList<>();
         initRecyclerView();
     }
@@ -74,21 +71,11 @@ public class MainActivity extends AppCompatActivity {
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build().create(RetrieveData.class);
-        // Note: Somewhere here the app breaks down and stops working
-        // I suspect the repositoryList member variable is not being updated by the API call
-        compositeDisposable.add(requestInterface.getRepositories("4da8a01b33b9a31934210efb4d729697a6303c34", query) // Putting token in code is probably bad practice
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeOn(Schedulers.io())
-                .subscribe(this::handleResponse,this::handleError));
-    }
-
-    private void handleResponse(List<Repository> list) {
-        repositoryList = list;
-        generateRepoList();
-    }
-
-    private void handleError(Throwable error) {
-        Toast.makeText(this, "Error "+error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+        // Note: The app breaks down and stops working here
+        // There is an error with the observable returned from the API call
+        requestInterface.getRepositories("4da8a01b33b9a31934210efb4d729697a6303c34", query).subscribe(repositoryList1 -> {
+            repositoryList = repositoryList1;
+        });
     }
 
     // Generates recyclerView based on new repositoryList
