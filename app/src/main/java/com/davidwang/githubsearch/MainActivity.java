@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build().create(RetrieveData.class);
 
-        compositeDisposable.add(requestInterface.getRepositories(query)
+        compositeDisposable.add(requestInterface.getRepositories("4da8a01b33b9a31934210efb4d729697a6303c34", query) // Putting token in code is probably bad practice
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(this::handleResponse,this::handleError));
