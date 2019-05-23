@@ -1,5 +1,6 @@
 package com.davidwang.githubsearch;
 
+import android.app.SearchManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
@@ -31,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
 
     private CompositeDisposable compositeDisposable;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,11 +41,19 @@ public class MainActivity extends AppCompatActivity {
 
         compositeDisposable = new CompositeDisposable();
         initRecyclerView(); // Set up RecyclerView
-
-        loadJSON(); //TODO: needs to be called every time search is used
     }
 
-    // Helper function to initialize recyclerView
+    @Override
+    protected void onNewIntent (Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            String query = intent.getStringExtra(SearchManager.QUERY);
+            loadJSON(query);
+        }
+    }
+
+
+    // HELPER FUNCTIONS
+    // Initialize recyclerView
     private void initRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true);
@@ -50,14 +61,16 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
     }
 
-    private void loadJSON() {
+    // Called every time a search is made
+    // Remakes list of repositories
+    private void loadJSON(String query) {
         RetrieveData requestInterface = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())
                 .build().create(RetrieveData.class);
 
-        compositeDisposable.add(requestInterface.getRepositories()      //TODO: find way to get query here
+        compositeDisposable.add(requestInterface.getRepositories(query)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .subscribe(this::handleResponse,this::handleError));
