@@ -22,6 +22,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import com.google.gson.Gson;
 
 public class MainActivity extends AppCompatActivity {
     private static final String BASE_URL = "https://api.github.com/";
@@ -79,12 +80,21 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleResponse(List<Repository> list) {
         repositoryList = list;
-        myAdapter = new RepositoryAdapter(repositoryList);
-        recyclerView.setAdapter(myAdapter);
+        generateRepoList();
     }
 
     private void handleError(Throwable error) {
         Toast.makeText(this, "Error "+error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+    }
+
+    // Generates list of repositories
+    // Called whenever the search query changes
+    private void generateRepoList() {
+        recyclerView = findViewById(R.id.recyclerView);
+        myAdapter = new RepositoryAdapter(repositoryList);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setAdapter(myAdapter);
     }
 
 
@@ -109,13 +119,5 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Generates list of repositories
-    // Called whenever the search query changes
-    private void generateRepoList(List<Repository> repositoryList) {
-        recyclerView = findViewById(R.id.recyclerView);
-        myAdapter = new RepositoryAdapter(repositoryList);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(MainActivity.this);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setAdapter(myAdapter);
-    }
+
 }
