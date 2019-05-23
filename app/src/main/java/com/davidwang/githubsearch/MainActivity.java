@@ -44,11 +44,12 @@ public class MainActivity extends AppCompatActivity {
 
         compositeDisposable = new CompositeDisposable();
         repositoryList = new ArrayList<>();
-        initRecyclerView(); // Set up RecyclerView
+        initRecyclerView();
     }
 
     // HELPER FUNCTIONS
     // Initialize recyclerView
+    // Sets up adapter and layout manager
     private void initRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setHasFixedSize(true);
@@ -57,21 +58,24 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
+    // Called onClick for 'search' button
+    // Reads text from textbox and sends as 'query'
     public void search(View view) {
         EditText editText = (EditText) findViewById(R.id.editText);
         String query = editText.getText().toString();
         loadJSON(query);
     }
 
-    // Called every time a search is made
-    // Remakes list of repositories
+    // Called every time a search is made (i.e. 'search' button is pressed
+    // Remakes list of repositories based on results from query
     private void loadJSON(String query) {
         RetrieveData requestInterface = new retrofit2.Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build().create(RetrieveData.class);
-
+        // Note: Somewhere here the app breaks down and stops working
+        // I suspect the repositoryList member variable is not being updated by the API call
         compositeDisposable.add(requestInterface.getRepositories("4da8a01b33b9a31934210efb4d729697a6303c34", query) // Putting token in code is probably bad practice
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
@@ -87,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "Error "+error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
     }
 
-    // Generates list of repositories
-    // Called whenever the search query changes
+    // Generates recyclerView based on new repositoryList
+    // Called after the API call is made
     private void generateRepoList() {
         recyclerView = findViewById(R.id.recyclerView);
         myAdapter = new RepositoryAdapter(repositoryList);
@@ -106,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    // Handle item selection
-    // On click, 'Favorites' creates a new Favorites activity
+    // Handle item selection for overflow menu
+    // OnClick, 'Favorites' creates a new Favorites activity
     //  which shows the repos that were selected as favorites
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
