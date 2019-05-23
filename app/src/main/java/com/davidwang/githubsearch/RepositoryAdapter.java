@@ -16,17 +16,16 @@ public class RepositoryAdapter extends RecyclerView.Adapter<RepositoryAdapter.My
         public TextView nameText;
         public TextView descriptionText;
         public TextView languageText;
-        public ImageView avatarImage;
-        public ImageView favoriteImage;
+//        public ImageView avatarImage;
+//        public ImageView favoriteImage;
 
         public MyViewHolder(View view) {
             super(view);
             nameText = view.findViewById(R.id.itemName);
             descriptionText = view.findViewById(R.id.itemDescription);
-            descriptionText = view.findViewById(R.id.itemDescription);
             languageText = view.findViewById(R.id.itemLanguage);
-            avatarImage = view.findViewById(R.id.itemAvatar);
-            favoriteImage = view.findViewById(R.id.itemFavorite);
+//            avatarImage = view.findViewById(R.id.itemAvatar);
+//            favoriteImage = view.findViewById(R.id.itemFavorite);
         }
     }
 
@@ -43,7 +42,10 @@ public class RepositoryAdapter extends RecyclerView.Adapter<RepositoryAdapter.My
     @Override
     public void onBindViewHolder(MyViewHolder holder, final int position) {
         Repository repo = repositoryList.get(position);
-
+        holder.nameText.setText(repo.getName());
+        holder.descriptionText.setText(repo.getDescription());
+        holder.languageText.setText(repo.getLanguage());
+//        holder.avatarImage.setImageDrawable(repo.avatar);   //TODO: figure out pictures
     }
 
     @Override

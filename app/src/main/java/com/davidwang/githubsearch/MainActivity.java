@@ -9,74 +9,70 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.content.Intent;
 import android.support.v7.widget.LinearLayoutManager;
+import android.widget.Toast;
 
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
-import okhttp3.OkHttpClient;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String BASE_URL = "https://api.github.com/";
+
     private SearchView searchView;
     private RecyclerView recyclerView;
     private RecyclerView.Adapter myAdapter;
     private RecyclerView.LayoutManager layoutManager;
     private List<Repository> repositoryList;
 
+    private CompositeDisposable compositeDisposable;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Set up RecyclerView
+        compositeDisposable = new CompositeDisposable();
+        initRecyclerView(); // Set up RecyclerView
+
+        loadJSON(); //TODO: needs to be called every time search is used
+    }
+
+    // Helper function to initialize recyclerView
+    private void initRecyclerView() {
         recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setHasFixedSize(true);     // for better performance
-
-        // Create a Retrofit instance
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.github.com/search")
-                .addConverterFactory(GsonConverterFactory.create())
-                .client(httpClient.build())
-                .build();
-
-        searchView = findViewById(R.id.searchView);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                RetrieveData service = RetrofitClientInstance.getRetrofitInstance().create(RetrieveData.class);
-                Call<List<Repository>> call = service.getRepositories(query);
-                call.enqueue(new Callback<List<Repository>>() {
-                    @Override
-                    public void onResponse(Call<List<Repository>> call, Response<List<Repository>> response) {
-                        generateRepoList(response.body());
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<Repository>> call, Throwable t) {
-
-                    }
-                });
-                return true;
-            }
-            @Override
-            public boolean onQueryTextChange(String text) {
-                return false;
-            }
-        });
-
-
-        // Use a linear layout manager
-        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setHasFixedSize(true);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
         recyclerView.setLayoutManager(layoutManager);
+    }
 
-        // Specify the adapter
+    private void loadJSON() {
+        RetrieveData requestInterface = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .addConverterFactory(GsonConverterFactory.create())
+                .build().create(RetrieveData.class);
+
+        compositeDisposable.add(requestInterface.getRepositories()      //TODO: find way to get query here
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe(this::handleResponse,this::handleError));
+    }
+
+    private void handleResponse(List<Repository> list) {
+        repositoryList = list;
         myAdapter = new RepositoryAdapter(repositoryList);
         recyclerView.setAdapter(myAdapter);
     }
+
+    private void handleError(Throwable error) {
+        Toast.makeText(this, "Error "+error.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
+    }
+
 
     // Populates overflow menu with items
     // There is only one item: 'Favorites'
