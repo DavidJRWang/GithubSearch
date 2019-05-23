@@ -45,7 +45,7 @@ public class RepositoryAdapter extends RecyclerView.Adapter<RepositoryAdapter.My
         holder.nameText.setText(repo.getName());
         holder.descriptionText.setText(repo.getDescription());
         holder.languageText.setText(repo.getLanguage());
-//        holder.avatarImage.setImageDrawable(repo.avatar);   //TODO: figure out pictures
+//        holder.avatarImage.setImageDrawable(repo.avatar);
     }
 
     @Override
